@@ -166,7 +166,7 @@ partial def findAttrsE (e : Expr) (whnfed := false) : MetaM Unit := do
 
 partial def findAttrs (c : Name) (ls : List Level) (args : Array Expr) : MetaM Unit := do
   if c == ``registerPersistentEnvExtension then
-    let e ← mkAppM ``PersistentEnvExtensionDescr.name #[args[4]!]
+    let e ← mkAppM ``PersistentEnvExtensionDescrCore.name #[(<- mkAppM ``PersistentEnvExtensionDescr.toPersistentEnvExtensionDescrCore #[args[4]!])]
     try
       let n ← evalName (← whnf e)
       if !args[0]!.hasFVar && !args[1]!.hasFVar && !args[2]!.hasFVar then
@@ -191,7 +191,7 @@ partial def mark : ObjPtr → StateM (RefSet × Nat) Unit
   | .ptr ptr => do
     unless keep ptr do return
     if (← get).1.contains ptr then return
-    let (o, sz) := self[ptr]!
+    let some (o, sz) := self[ptr]? | return
     modify fun s => (s.1.insert ptr, s.2 + sz)
     match o with
     | .ctor _ fs _
@@ -235,7 +235,7 @@ partial def parse (ptr : ObjPtr) (layout : LayoutVal := .unknown 0) : ReprM Pars
   catch _ => pure none
   if let some ({ ctors := [n], .. }, params) := iv then
     if let .newtype i nfields ty ← getLayoutCache n then
-      let mut out := mkArray nfields (.other f!"*")
+      let mut out := Array.replicate nfields (.other f!"*")
       let ty ← instantiateLambda ty params
       if let some i := i then
         out := out.set! i (← parse ptr (.other ty 0))
@@ -254,7 +254,7 @@ partial def parse (ptr : ObjPtr) (layout : LayoutVal := .unknown 0) : ReprM Pars
   | .ptr ptr =>
     if let some res := (← get).ids[ptr]? then return res
     let start := (← get).size
-    let (o, sz) := self[ptr]!
+    let some (o, sz) := self[ptr]? | return .other f!"??? {ptr}"
     let mut parsed := none
     let res ← match o with
       | Obj.ctor idx fields sfields =>

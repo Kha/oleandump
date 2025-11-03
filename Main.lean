@@ -14,6 +14,7 @@ def main (args : List String) : IO Unit := do
     IO.println s!"useGmp = {useGmp}"
     IO.println s!"leanVersion = {leanVersion}"
     IO.println s!"githash = {githash}"
+    IO.println s!"base = {base}"
     initSearchPath (← findSysroot)
     let opts := ({} : Options)
     let mods := if mods.isEmpty then #[`Lean] else mods.toArray.map String.toName
