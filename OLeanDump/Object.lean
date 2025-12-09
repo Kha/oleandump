@@ -49,7 +49,7 @@ def LayoutVal.repr : LayoutVal → Format
 
 def isIrrelevant (ty : Expr) : MetaM Bool := do
   if ty.isSort then return true
-  if (← whnf ty).isProp then return true
+  if (← isProp (← whnf ty)) then return true
   unless ty.isForall do return false
   forallTelescopeReducing ty fun _ ty =>
     return (← whnf ty).isSort
@@ -336,7 +336,7 @@ partial def parse (ptr : ObjPtr) (layout : LayoutVal := .unknown 0) : ReprM Pars
     let res := res.fill.nest 2
     modify fun st => { st with size := st.size + sz }
     let diff := (← get).size - start
-    let newDeclId := s!"x{String.mk (Nat.toDigits 16 ((ptr - (← get).base).toNat % 2^32))}\{{diff}}"
+    let newDeclId := s!"x{String.ofList (Nat.toDigits 16 ((ptr - (← get).base).toNat % 2^32))}\{{diff}}"
     let result := parsed.getD (.other newDeclId diff)
     modify fun st => { st with ids := st.ids.insert ptr result }
     if parsed.isNone then

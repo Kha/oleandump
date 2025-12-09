@@ -1,0 +1,15 @@
+name = "oleandump"
+defaultTargets = ["oleandump"]
+
+[[require]]
+name = "Qq"
+git = "https://github.com/leanprover-community/quote4"
+rev = "stable"
+
+[[lean_lib]]
+name = "OLeanDump"
+
+[[lean_exe]]
+name = "oleandump"
+root = "Main"
+supportInterpreter = true
